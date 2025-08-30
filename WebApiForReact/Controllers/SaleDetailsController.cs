@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WebApiForReact.EF;
+using WebApiForReact.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -11,6 +12,12 @@ namespace WebApiForReact.Controllers
     {
         public SaleDetailsController()
         {
+        }
+
+        private readonly IWebHostEnvironment _environment;
+        public SaleDetailsController(IConfiguration configuration, IWebHostEnvironment environment)
+        {
+            _environment = environment;
         }
 
         // GET: api/<SalesController>
@@ -41,11 +48,36 @@ namespace WebApiForReact.Controllers
         }
 
         // POST api/<SalesController>
-        [HttpPost]
+        /*[HttpPost]
         public void Post([FromBody] SaleDetail model)
         {
             ReactjsDbContext _context = new ReactjsDbContext();
             _context.SaleDetails.Add(model);
+            _context.SaveChanges();
+        }*/
+
+        [HttpPost]
+        public void Post([FromBody] SaleDetailVm model)
+        {
+            if (model.File == null || model.File.Length == 0)
+            {
+                //return BadRequest("No file uploaded");
+            }
+            else
+            {
+                // Process the file and additional data
+                var fileExtension = Path.GetExtension(model.File.FileName).ToLower();
+                var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(_environment.ContentRootPath, "Uploads", uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    model.File.CopyTo(stream);
+                }
+            }
+
+            ReactjsDbContext _context = new ReactjsDbContext();
+            //_context.SaleDetails.Add(model);
             _context.SaveChanges();
         }
 
